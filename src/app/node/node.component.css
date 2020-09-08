@@ -1,0 +1,24 @@
+:host {
+  z-index: 1;
+}
+
+.node-button {
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  background-color: blue;
+  border: none;
+  cursor: pointer;
+}
+
+.wall {
+  background-color: gray;
+}
+
+.path {
+  background-color: green;
+}
+
+.visited {
+  background-color: rgba(1, 1, 150, 0.781);
+}
