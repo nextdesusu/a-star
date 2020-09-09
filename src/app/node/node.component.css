@@ -6,9 +6,20 @@
   width: 100%;
   height: 100%;
   z-index: 2;
-  background-color: blue;
+  background-color: rgb(2, 2, 92);
   border: none;
   cursor: pointer;
+  color: white;
+  font-size: .7em;
+  text-align: center;
+}
+
+.startNode {
+  background-color: green;
+}
+
+.endNode {
+  background-color: red;
 }
 
 .wall {
@@ -20,5 +31,9 @@
 }
 
 .visited {
-  background-color: rgba(1, 1, 150, 0.781);
+  opacity: .7;
+}
+
+.solid {
+  background-color: gray;
 }

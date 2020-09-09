@@ -1,5 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { AStarNode, NodeTable } from "../../a-star/types";
+import { NodeTable, AStarNode } from "../../a-star/types";
+
+enum MouseButtons {
+  left = 1,
+  middle,
+  right
+}
 
 @Component({
   selector: 'app-node-container',
@@ -13,14 +19,30 @@ export class NodeContainerComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  onRightClick() {
+    return false;
+  }
+
   handleClick(event: any) {
+    event.preventDefault();
     const target = event.target;
     const x = target.getAttribute("data-pos-x");
     const y = target.getAttribute("data-pos-y");
-    if (x !== null && y !== null) {
-      const node = this.NT.nodeAt(Number(x), Number(y));
-      console.log("node:", node);
+    if (x === null || y === null) {
+      return;
+    }
+    console.log(x, ":", y);
+    const node: AStarNode = this.NT.nodeAt(Number(x), Number(y));
+    if (event.which === MouseButtons.left && !event.ctrlKey) {
+      node.solid = false;
+      this.NT.setStartNode(node);
+    } else if (event.which === MouseButtons.right) {
+      node.solid = false;
+      this.NT.setEndNode(node);
+    } else if (event.which === MouseButtons.left && event.ctrlKey) {
+      if (node !== this.NT.end && node !== this.NT.start) {
+        node.solid = !node.solid;
+      }
     }
   }
-
 }

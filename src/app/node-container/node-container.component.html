@@ -1,3 +1,13 @@
-<div (click)="handleClick($event)" class="node-container">
-  <app-node *ngFor="let node of NT" [nodeProperties]="node"></app-node>
+<div
+  (contextmenu)="onRightClick()"
+  (mousedown)="handleClick($event)"
+  class="node-container"
+  >
+  <app-node *ngFor="let node of NT" [props]="{
+    ANode: node,
+    startX: NT.start.x,
+    startY: NT.start.y,
+    endX: NT.end.x,
+    endY: NT.end.x
+  }"></app-node>
 </div>

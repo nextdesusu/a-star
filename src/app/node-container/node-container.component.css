@@ -3,6 +3,6 @@
 
 .node-container {
   display: grid;
-  grid-template: repeat(16, 30px) / repeat(16, 30px);
+  grid-template: repeat(16, 32px) / repeat(16, 32px);
   grid-gap: 5px;
 }
