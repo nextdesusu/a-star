@@ -23,23 +23,22 @@ export class NodeContainerComponent implements OnInit {
     return false;
   }
 
-  handleClick(event: any) {
+  handleClick(event: any): void {
     event.preventDefault();
     const target = event.target;
-    const x = target.getAttribute("data-pos-x");
-    const y = target.getAttribute("data-pos-y");
-    if (x === null || y === null) {
+    const sx: string | null = target.getAttribute("data-pos-x");
+    const sy: string | null = target.getAttribute("data-pos-y");
+    if (sx === null || sy === null) {
       return;
     }
+    const x: number = Number(sx), y: number = Number(sy);
     console.log(x, ":", y);
-    const node: AStarNode = this.NT.nodeAt(Number(x), Number(y));
     if (event.which === MouseButtons.left && !event.ctrlKey) {
-      node.solid = false;
-      this.NT.setStartNode(node);
+      this.NT.setStartNode(x, y);
     } else if (event.which === MouseButtons.right) {
-      node.solid = false;
-      this.NT.setEndNode(node);
+      this.NT.setEndNode(x, y);
     } else if (event.which === MouseButtons.left && event.ctrlKey) {
+      const node: AStarNode = this.NT.nodeAt(x, y);
       if (node !== this.NT.end && node !== this.NT.start) {
         node.solid = !node.solid;
       }
