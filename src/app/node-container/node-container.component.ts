@@ -17,6 +17,7 @@ export class NodeContainerComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.NT.findPath();
   }
 
   onRightClick() {

@@ -37,3 +37,7 @@
 .solid {
   background-color: gray;
 }
+
+.pathNode {
+  background-color: yellow;
+}

@@ -8,6 +8,7 @@ interface NodeProps {
   startY: number;
   endX: number;
   endY: number;
+  isInPath: boolean;
 }
 
 @Component({
