@@ -13,7 +13,7 @@ enum MouseButtons {
   styleUrls: ['./node-container.component.css']
 })
 export class NodeContainerComponent implements OnInit {
-  NT: NodeTable = new NodeTable(16);
+  NT: NodeTable = new NodeTable(16, true);
   constructor() { }
 
   ngOnInit(): void {
@@ -22,6 +22,13 @@ export class NodeContainerComponent implements OnInit {
 
   onRightClick() {
     return false;
+  }
+
+  shouldMarkAsPath(node: AStarNode): boolean {
+    if (node === this.NT.end || node === this.NT.start) {
+      return false;
+    }
+    return this.NT.belongsToPath(node.x, node.y);
   }
 
   handleClick(event: any): void {
@@ -44,5 +51,6 @@ export class NodeContainerComponent implements OnInit {
         node.solid = !node.solid;
       }
     }
+    this.NT.findPath();
   }
 }

@@ -1,8 +1,23 @@
+const manhattanHeuristic = (n1: AStarNode, n2: AStarNode): number => {
+  const d1 = Math.abs(n2.x - n1.x);
+  const d2 = Math.abs(n2.y - n1.y);
+  return d1 + d2;
+}
+
+const diagonalHeuristic = (n1: AStarNode, n2: AStarNode): number => {
+  const D = 1;//Math.round((n1.moveCost + n2.moveCost) / 2); // = 1
+  const D2 = Math.sqrt(2);
+  const d1 = Math.abs(n2.x - n1.x);
+  const d2 = Math.abs(n2.y - n1.y);
+  return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+}
+
 export interface AStarNode {
   ancestor: AStarNode | null;
   visited: boolean;
   closed: boolean;
   solid: boolean;
+  moveCost: number;
   gWeight: number;
   lWeight: number;
   h: number;
@@ -11,15 +26,20 @@ export interface AStarNode {
 }
 
 export class NodeTable {
-  pathSet: Set<AStarNode>;
+  private constructedPath: Array<AStarNode>;
   private _size: number;
+  private diagonal: boolean;
   private nodes: Array<AStarNode>;
+  private dirtyNodes: Array<AStarNode>;
   private _start: AStarNode;
   private _end: AStarNode;
-  constructor(tableSize: number) {
-    this.pathSet = new Set();
+  private hFunc: (n1: AStarNode, n2: AStarNode) => number;
+  constructor(tableSize: number, diagonal: boolean = false) {
+    this.constructedPath = [];
     this._size = tableSize;
+    this.diagonal = diagonal;
     this.nodes = new Array(tableSize * tableSize);
+    this.hFunc = diagonal ? diagonalHeuristic : manhattanHeuristic;
     for (let x = 0; x < tableSize; x += 1) {
       for (let y = 0; y < tableSize; y += 1) {
         const node: AStarNode = {
@@ -29,6 +49,7 @@ export class NodeTable {
           closed: false,
           gWeight: Infinity,
           lWeight: Infinity,
+          moveCost: 1,
           h: -1,
           x,
           y
@@ -36,6 +57,7 @@ export class NodeTable {
         this.nodes[y * tableSize + x] = node;
       }
     }
+    this.dirtyNodes = [];
 
     this._start = this.nodeAt(0, 0);
     this._end = this.nodeAt(tableSize - 1, tableSize - 1);
@@ -53,16 +75,23 @@ export class NodeTable {
     return this._start;
   }
 
-  private reconstructPath() {
-    let current = this.end;
-    while (current.ancestor !== null) {
-      current = current.ancestor;
-      this.pathSet.add(current);
-    }
+  get pathConstructed() {
+    return this.constructedPath.length > 0;
   }
 
   belongsToPath(x: number, y: number): boolean {
-    return this.pathSet.has(this.nodeAt(x, y));
+    const node = this.nodeAt(x, y);
+    return this.constructedPath.indexOf(node) !== -1;
+  }
+
+  private reconstructPath() {
+    this.constructedPath = [];
+    let current = this.end;
+    while (current.ancestor !== null) {
+      current = current.ancestor;
+      this.constructedPath.push(current);
+    }
+    this.constructedPath.reverse();
   }
 
   setStartNode(x: number, y: number): boolean {
@@ -97,51 +126,64 @@ export class NodeTable {
 
   *neighboursOf(node: AStarNode) {
     const { x, y } = node;
-    if (x > 0) {
-      yield this.nodeAt(x - 1, y);
-    }
-    if (y > 0) {
-      yield this.nodeAt(x, y - 1);
-    }
-    if (x < this.size - 1) {
-      yield this.nodeAt(x + 1, y);
-    }
-    if (y < this.size - 1) {
-      yield this.nodeAt(x, y + 1);
+    if (x > 0) yield this.nodeAt(x - 1, y);
+    if (y > 0) yield this.nodeAt(x, y - 1);
+    if (x < this.size - 1) yield this.nodeAt(x + 1, y);
+    if (y < this.size - 1) yield this.nodeAt(x, y + 1);
+    if (this.diagonal) {
+      if (x > 0 && y > 0) yield this.nodeAt(x - 1, y - 1);
+      if (y > 0 && x < this.size - 1) yield this.nodeAt(x + 1, y - 1);
+      if (x < this.size - 1 && y < this.size - 1) yield this.nodeAt(x + 1, y + 1);
+      if (y < this.size - 1 && x > 0) yield this.nodeAt(x - 1, y + 1);
     }
   }
 
-  findPath() {
-    const { end, start } = this;
-    const manhattanHeuristic = (n1: AStarNode, n2: AStarNode) => {
-      const d1 = Math.abs(n2.x - n1.x);
-      const d2 = Math.abs(n2.y - n1.y);
-      return d1 + d2;
+  private cleanNode(node: AStarNode): void {
+    node.gWeight = Infinity;
+    node.lWeight = Infinity;
+    node.visited = false;
+    node.closed = false;
+    node.ancestor = null;
+    node.h = -1;
+  }
+
+  private cleanDirtyNodes(): void {
+    for (const node of this.dirtyNodes) {
+      this.cleanNode(node);
     }
+    this.dirtyNodes = [];
+  }
+
+  private markAsDirty(node: AStarNode): void {
+    this.dirtyNodes.push(node);
+  }
+
+  findPath() {
+    this.cleanDirtyNodes();
+    const { end, start } = this;
 
     //change costs to min heap!
     start.gWeight = 0;
     start.lWeight = 0;
-    start.h = manhattanHeuristic(start, end);
+    start.h = this.hFunc(start, end);
     start.visited = true;
     const costs: Array<AStarNode> = [start];
     while (costs.length > 0) {
-      console.log("current...", costs);
       const current: AStarNode = costs.pop();
       if (current === end) {
-        this.reconstructPath();
-        return;
+        return this.reconstructPath();
       }
       current.closed = true;
+      this.markAsDirty(current);
       for (const neighbour of this.neighboursOf(current)) {
         if (neighbour.solid || neighbour.closed) {
           continue;
         }
-        //default cost is 1
-        const gWeight = current.gWeight + 1;
+        this.markAsDirty(neighbour);
+        const gWeight = current.gWeight + neighbour.moveCost;
         if (!neighbour.visited || gWeight < neighbour.gWeight) {
           neighbour.ancestor = current;
-          neighbour.h = neighbour.h > - 1 ? neighbour.h : manhattanHeuristic(neighbour, end);
+          neighbour.h = neighbour.h > - 1 ? neighbour.h : this.hFunc(neighbour, end);
           neighbour.gWeight = gWeight;
 
           neighbour.lWeight = neighbour.gWeight + neighbour.h;
@@ -155,5 +197,6 @@ export class NodeTable {
         }
       }
     }
+    this.constructedPath = [];
   }
 }
