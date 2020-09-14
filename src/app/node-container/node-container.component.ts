@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NodeTable, AStarNode } from "../../a-star/types";
+import { NodeTable, AStarNode } from "../../a-star";
 
 enum MouseButtons {
   left = 1,
@@ -13,7 +13,7 @@ enum MouseButtons {
   styleUrls: ['./node-container.component.css']
 })
 export class NodeContainerComponent implements OnInit {
-  NT: NodeTable = new NodeTable(16, true);
+  NT: NodeTable = new NodeTable({ tableSize :16, diagonal: true});
   constructor() { }
 
   ngOnInit(): void {
@@ -40,16 +40,17 @@ export class NodeContainerComponent implements OnInit {
       return;
     }
     const x: number = Number(sx), y: number = Number(sy);
-    console.log(x, ":", y);
     if (event.which === MouseButtons.left && !event.ctrlKey) {
       this.NT.setStartNode(x, y);
-    } else if (event.which === MouseButtons.right) {
+    } else if (event.which === MouseButtons.right && !event.ctrlKey) {
       this.NT.setEndNode(x, y);
     } else if (event.which === MouseButtons.left && event.ctrlKey) {
       const node: AStarNode = this.NT.nodeAt(x, y);
       if (node !== this.NT.end && node !== this.NT.start) {
         node.solid = !node.solid;
       }
+    } else if (event.which === MouseButtons.right && event.ctrlKey) {
+      this.NT.changePathCost(x, y);
     }
     this.NT.findPath();
   }

@@ -1,11 +1,5 @@
 <button
-  [ngClass]="{
-    visited: props.ANode.visited,
-    solid: props.ANode.solid,
-    startNode: isStartNode,
-    endNode: isEndNode,
-    pathNode: props.isInPath
-  }"
+  [ngClass]="nodeClass"
   class="node-button"
   [attr.data-pos-x]="props.ANode.x"
   [attr.data-pos-y]="props.ANode.y"

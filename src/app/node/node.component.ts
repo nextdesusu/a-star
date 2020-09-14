@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { AStarNode } from "../../a-star/types";
+import { AStarNode } from "../../a-star";
 import { NullTemplateVisitor } from '@angular/compiler';
 
 interface NodeProps {
@@ -9,6 +9,10 @@ interface NodeProps {
   endX: number;
   endY: number;
   isInPath: boolean;
+}
+
+interface nodeClass {
+  [key: string]: true;
 }
 
 @Component({
@@ -21,10 +25,13 @@ export class NodeComponent implements OnInit {
   constructor() { }
 
   get buttonText(): string {
+    /*
     const { gWeight, lWeight } = this.props.ANode;
     const gValue: string = isFinite(gWeight) ? String(gWeight) : "∞";
     const lValue: string = isFinite(lWeight) ? String(lWeight) : "∞";
     return `g: ${gValue}\nl: ${lValue}`;
+    */
+    return String(this.props.ANode.moveCost);
   }
 
   get isStartNode(): boolean {
@@ -35,6 +42,24 @@ export class NodeComponent implements OnInit {
   get isEndNode(): boolean {
     const { ANode, endX, endY } = this.props;
     return ANode.x === endX && ANode.y === endY;
+  }
+
+  get nodeClass(): nodeClass {
+    if (this.isStartNode) {
+      return { startNode: true };
+    }
+    if (this.isEndNode) {
+      return { endNode: true };
+    }
+    if (this.props.ANode.solid) {
+      return { solid: true };
+    }
+    if (this.props.isInPath) {
+      return { pathNode: true };
+    }
+    if (this.props.ANode.visited) {
+      return { visited: true };
+    }
   }
 
   ngOnInit(): void {
